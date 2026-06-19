@@ -51,7 +51,9 @@
 #include "editor/script/script_editor_plugin.h"
 #include "editor/settings/editor_settings.h"
 #include "editor/themes/editor_scale.h"
+#ifndef _3D_DISABLED
 #include "scene/3d/mesh_instance_3d.h"
+#endif
 #include "scene/animation/animation_player.h"
 #include "scene/animation/tween.h"
 #include "scene/gui/check_box.h"
@@ -1465,15 +1467,17 @@ void AnimationTimelineEdit::_notification(int p_what) {
 			filter_track->set_right_icon(get_editor_theme_icon(SNAME("Search")));
 
 			add_track->get_popup()->clear();
-			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyValue")), TTRC("Property Track..."));
-			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyXPosition")), TTRC("3D Position Track..."));
-			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyXRotation")), TTRC("3D Rotation Track..."));
-			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyXScale")), TTRC("3D Scale Track..."));
-			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyBlendShape")), TTRC("Blend Shape Track..."));
-			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyCall")), TTRC("Call Method Track..."));
-			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyBezier")), TTRC("Bezier Curve Track..."));
-			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyAudio")), TTRC("Audio Playback Track..."));
-			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyAnimation")), TTRC("Animation Playback Track..."));
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyValue")), TTRC("Property Track..."), Animation::TYPE_VALUE);
+#ifndef _3D_DISABLED
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyXPosition")), TTRC("3D Position Track..."), Animation::TYPE_POSITION_3D);
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyXRotation")), TTRC("3D Rotation Track..."), Animation::TYPE_ROTATION_3D);
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyXScale")), TTRC("3D Scale Track..."), Animation::TYPE_SCALE_3D);
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyBlendShape")), TTRC("Blend Shape Track..."), Animation::TYPE_BLEND_SHAPE);
+#endif
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyCall")), TTRC("Call Method Track..."), Animation::TYPE_METHOD);
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyBezier")), TTRC("Bezier Curve Track..."), Animation::TYPE_BEZIER);
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyAudio")), TTRC("Audio Playback Track..."), Animation::TYPE_AUDIO);
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyAnimation")), TTRC("Animation Playback Track..."), Animation::TYPE_ANIMATION);
 
 			timeline_resize_rect.size = get_editor_theme_icon(SNAME("TimelineHandle"))->get_size();
 		} break;
@@ -2114,7 +2118,7 @@ AnimationTimelineEdit::AnimationTimelineEdit() {
 	add_child(len_hb);
 
 	add_track->hide();
-	add_track->get_popup()->connect("index_pressed", callable_mp(this, &AnimationTimelineEdit::_track_added));
+	add_track->get_popup()->connect(SceneStringName(id_pressed), callable_mp(this, &AnimationTimelineEdit::_track_added));
 	len_hb->hide();
 
 	panner.instantiate();
@@ -4552,6 +4556,7 @@ void AnimationTrackEditor::_insert_track(bool p_reset_wanted, bool p_create_bezi
 	}
 }
 
+#ifndef _3D_DISABLED
 void AnimationTrackEditor::insert_transform_key(Node3D *p_node, const String &p_sub, const Animation::TrackType p_type, const Variant &p_value) {
 	if (read_only) {
 		popup_read_only_dialog();
@@ -4621,6 +4626,7 @@ bool AnimationTrackEditor::has_track(Node3D *p_node, const String &p_sub, const 
 	}
 	return false;
 }
+#endif
 
 void AnimationTrackEditor::_insert_animation_key(NodePath p_path, const Variant &p_value) {
 	if (read_only) {
@@ -5748,6 +5754,7 @@ void AnimationTrackEditor::_new_track_node_selected(NodePath p_path) {
 	ERR_FAIL_NULL(node);
 	NodePath path_to = root->get_path_to(node, true);
 
+#ifndef _3D_DISABLED
 	if (adding_track_type == Animation::TYPE_BLEND_SHAPE && !node->is_class("MeshInstance3D")) {
 		EditorNode::get_singleton()->show_warning(TTR("Blend Shape tracks only apply to MeshInstance3D nodes."));
 		return;
@@ -5757,6 +5764,7 @@ void AnimationTrackEditor::_new_track_node_selected(NodePath p_path) {
 		EditorNode::get_singleton()->show_warning(TTR("Position/Rotation/Scale 3D tracks only apply to 3D-based nodes."));
 		return;
 	}
+#endif
 
 	switch (adding_track_type) {
 		case Animation::TYPE_VALUE: {
@@ -5764,6 +5772,7 @@ void AnimationTrackEditor::_new_track_node_selected(NodePath p_path) {
 			prop_selector->set_type_filter(Vector<Variant::Type>());
 			prop_selector->select_property_from_instance(node);
 		} break;
+#ifndef _3D_DISABLED
 		case Animation::TYPE_BLEND_SHAPE: {
 			adding_track_path = path_to;
 			Vector<Variant::Type> filter;
@@ -5774,6 +5783,7 @@ void AnimationTrackEditor::_new_track_node_selected(NodePath p_path) {
 		case Animation::TYPE_POSITION_3D:
 		case Animation::TYPE_ROTATION_3D:
 		case Animation::TYPE_SCALE_3D:
+#endif
 		case Animation::TYPE_METHOD: {
 			EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
 			undo_redo->create_action(TTR("Add Track"));
@@ -5798,8 +5808,8 @@ void AnimationTrackEditor::_new_track_node_selected(NodePath p_path) {
 			prop_selector->select_property_from_instance(node);
 		} break;
 		case Animation::TYPE_AUDIO: {
-			if (!node->is_class("AudioStreamPlayer") && !node->is_class("AudioStreamPlayer2D") && !node->is_class("AudioStreamPlayer3D")) {
-				EditorNode::get_singleton()->show_warning(TTR("Audio tracks can only point to nodes of type:\n-AudioStreamPlayer\n-AudioStreamPlayer2D\n-AudioStreamPlayer3D"));
+			if (!node->is_class("AudioStreamPlayer") && !node->is_class("AudioStreamPlayer2D")) {
+				EditorNode::get_singleton()->show_warning(TTR("Audio tracks can only point to nodes of type:\n-AudioStreamPlayer\n-AudioStreamPlayer2D"));
 				return;
 			}
 
@@ -5848,6 +5858,7 @@ void AnimationTrackEditor::_add_track(int p_type) {
 	String title_text = TTRC("Pick a node to animate:");
 	Vector<StringName> valid_types;
 	switch (adding_track_type) {
+#ifndef _3D_DISABLED
 		case Animation::TYPE_BLEND_SHAPE: {
 			// Blend Shape is a property of MeshInstance3D.
 			valid_types.push_back(SNAME("MeshInstance3D"));
@@ -5858,13 +5869,16 @@ void AnimationTrackEditor::_add_track(int p_type) {
 			// 3D Properties come from nodes inheriting Node3D.
 			valid_types.push_back(SNAME("Node3D"));
 		} break;
+#endif
 		case Animation::TYPE_METHOD: {
 			title_text = TTRC("Pick a node to select method:");
 		} break;
 		case Animation::TYPE_AUDIO: {
 			valid_types.push_back(SNAME("AudioStreamPlayer"));
 			valid_types.push_back(SNAME("AudioStreamPlayer2D"));
+#ifndef _3D_DISABLED
 			valid_types.push_back(SNAME("AudioStreamPlayer3D"));
+#endif
 			title_text = TTRC("Pick a node to play audio:");
 		} break;
 		case Animation::TYPE_ANIMATION: {
@@ -6054,6 +6068,7 @@ void AnimationTrackEditor::_insert_key_from_track(float p_ofs, int p_track) {
 	// id.value is filled in each case handled below.
 
 	switch (animation->track_get_type(p_track)) {
+#ifndef _3D_DISABLED
 		case Animation::TYPE_POSITION_3D: {
 			Node3D *base = Object::cast_to<Node3D>(node);
 
@@ -6094,6 +6109,7 @@ void AnimationTrackEditor::_insert_key_from_track(float p_ofs, int p_track) {
 
 			id.value = base->get_blend_shape_value(base->find_blend_shape_by_name(id.path.get_subname(0)));
 		} break;
+#endif
 		case Animation::TYPE_VALUE: {
 			NodePath bp;
 			_find_hint_for_track(p_track, bp, &id.value);

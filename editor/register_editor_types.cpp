@@ -57,8 +57,6 @@
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/gui/editor_spin_slider.h"
 #include "editor/gui/editor_toaster.h"
-#include "editor/import/3d/resource_importer_obj.h"
-#include "editor/import/3d/resource_importer_scene.h"
 #include "editor/import/editor_import_plugin.h"
 #include "editor/import/resource_importer_bitmask.h"
 #include "editor/import/resource_importer_bmfont.h"
@@ -79,6 +77,7 @@
 #include "editor/inspector/input_event_editor_plugin.h"
 #include "editor/inspector/sub_viewport_preview_editor_plugin.h"
 #include "editor/inspector/tool_button_editor_plugin.h"
+#include "editor/plugins/editor_resource_conversion_plugin.h"
 #include "editor/scene/2d/camera_2d_editor_plugin.h"
 #include "editor/scene/2d/light_occluder_2d_editor_plugin.h"
 #include "editor/scene/2d/line_2d_editor_plugin.h"
@@ -92,6 +91,9 @@
 #include "editor/scene/2d/skeleton_2d_editor_plugin.h"
 #include "editor/scene/2d/sprite_2d_editor_plugin.h"
 #include "editor/scene/2d/tiles/tiles_editor_plugin.h"
+#ifndef _3D_DISABLED
+#include "editor/import/3d/resource_importer_obj.h"
+#include "editor/import/3d/resource_importer_scene.h"
 #include "editor/scene/3d/bone_map_editor_plugin.h"
 #include "editor/scene/3d/camera_3d_editor_plugin.h"
 #include "editor/scene/3d/gpu_particles_collision_sdf_editor_plugin.h"
@@ -108,6 +110,7 @@
 #include "editor/scene/3d/polygon_3d_editor_plugin.h"
 #include "editor/scene/3d/skeleton_3d_editor_plugin.h"
 #include "editor/scene/3d/voxel_gi_editor_plugin.h"
+#endif
 #include "editor/scene/curve_editor_plugin.h"
 #include "editor/scene/gradient_editor_plugin.h"
 #include "editor/scene/gui/control_editor_plugin.h"
@@ -116,7 +119,6 @@
 #include "editor/scene/gui/style_box_editor_plugin.h"
 #include "editor/scene/gui/theme_editor_plugin.h"
 #include "editor/scene/gui/virtual_joystick_editor_plugin.h"
-#include "editor/scene/material_editor_plugin.h"
 #include "editor/scene/packed_scene_editor_plugin.h"
 #include "editor/scene/resource_preloader_editor_plugin.h"
 #include "editor/scene/sprite_frames_editor_plugin.h"
@@ -139,9 +141,11 @@
 #include "editor/version_control/editor_vcs_interface.h"
 #include "servers/rendering/rendering_server.h"
 
-#ifndef DISABLE_DEPRECATED
+#if !defined(DISABLE_DEPRECATED) && !defined(_3D_DISABLED)
 #include "editor/scene/2d/parallax_background_editor_plugin.h"
 #include "editor/scene/3d/skeleton_ik_3d_editor_plugin.h"
+#elif !defined(DISABLE_DEPRECATED)
+#include "editor/scene/2d/parallax_background_editor_plugin.h"
 #endif
 
 void register_editor_types() {
@@ -162,8 +166,10 @@ void register_editor_types() {
 	GDREGISTER_CLASS(EditorFileDialog);
 	GDREGISTER_VIRTUAL_CLASS(EditorSettings);
 	GDREGISTER_ABSTRACT_CLASS(EditorToaster);
+#ifndef _3D_DISABLED
 	GDREGISTER_CLASS(EditorNode3DGizmo);
 	GDREGISTER_CLASS(EditorNode3DGizmoPlugin);
+#endif
 	GDREGISTER_ABSTRACT_CLASS(EditorResourcePreview);
 	GDREGISTER_CLASS(EditorResourcePreviewGenerator);
 	GDREGISTER_CLASS(EditorResourceTooltipPlugin);
@@ -184,8 +190,10 @@ void register_editor_types() {
 	register_exporter_types();
 
 	GDREGISTER_CLASS(EditorResourceConversionPlugin);
+#ifndef _3D_DISABLED
 	GDREGISTER_CLASS(EditorSceneFormatImporter);
 	GDREGISTER_CLASS(EditorScenePostImportPlugin);
+#endif
 	GDREGISTER_CLASS(EditorInspector);
 	GDREGISTER_CLASS(EditorInspectorPlugin);
 	GDREGISTER_CLASS(EditorProperty);
@@ -200,7 +208,9 @@ void register_editor_types() {
 	GDREGISTER_ABSTRACT_CLASS(FileSystemDock);
 	GDREGISTER_VIRTUAL_CLASS(EditorFileSystemImportFormatSupportQuery);
 
+#ifndef _3D_DISABLED
 	GDREGISTER_CLASS(EditorScenePostImport);
+#endif
 	GDREGISTER_VIRTUAL_CLASS(EditorCommandPalette);
 	GDREGISTER_CLASS(EditorDebuggerPlugin);
 	GDREGISTER_ABSTRACT_CLASS(EditorDebuggerSession);
@@ -214,8 +224,10 @@ void register_editor_types() {
 	GDREGISTER_CLASS(ResourceImporterImageFont);
 	GDREGISTER_CLASS(ResourceImporterSVG);
 	GDREGISTER_CLASS(ResourceImporterLayeredTexture);
+#ifndef _3D_DISABLED
 	GDREGISTER_CLASS(ResourceImporterOBJ);
 	GDREGISTER_CLASS(ResourceImporterScene);
+#endif
 	GDREGISTER_CLASS(ResourceImporterShaderFile);
 	GDREGISTER_CLASS(ResourceImporterTexture);
 	GDREGISTER_CLASS(ResourceImporterTextureAtlas);
@@ -226,37 +238,50 @@ void register_editor_types() {
 	EditorPlugins::add_by_type<AudioStreamEditorPlugin>();
 	EditorPlugins::add_by_type<AudioStreamRandomizerEditorPlugin>();
 	EditorPlugins::add_by_type<BitMapEditorPlugin>();
+#ifndef _3D_DISABLED
 	EditorPlugins::add_by_type<BoneMapEditorPlugin>();
 	EditorPlugins::add_by_type<Camera3DEditorPlugin>();
+#endif
 	EditorPlugins::add_by_type<ControlEditorPlugin>();
+#ifndef _3D_DISABLED
 	EditorPlugins::add_by_type<CPUParticles3DEditorPlugin>();
+#endif
 	EditorPlugins::add_by_type<CurveEditorPlugin>();
 	if (!Engine::get_singleton()->is_recovery_mode_hint()) {
 		EditorPlugins::add_by_type<DebugAdapterServer>();
 	}
 	EditorPlugins::add_by_type<EditorScriptPlugin>();
 	EditorPlugins::add_by_type<FontEditorPlugin>();
+#ifndef _3D_DISABLED
 	EditorPlugins::add_by_type<GPUParticles3DEditorPlugin>();
 	EditorPlugins::add_by_type<GPUParticlesCollisionSDF3DEditorPlugin>();
+#endif
 	EditorPlugins::add_by_type<GradientEditorPlugin>();
 	EditorPlugins::add_by_type<GradientTexture2DEditorPlugin>();
 	EditorPlugins::add_by_type<InputEventEditorPlugin>();
+#ifndef _3D_DISABLED
 	EditorPlugins::add_by_type<LightmapGIEditorPlugin>();
+#endif
 	EditorPlugins::add_by_type<MarginContainerEditorPlugin>();
-	EditorPlugins::add_by_type<MaterialEditorPlugin>();
+#ifndef _3D_DISABLED
 	EditorPlugins::add_by_type<MeshEditorPlugin>();
 	EditorPlugins::add_by_type<MeshInstance3DEditorPlugin>();
 	EditorPlugins::add_by_type<MeshLibraryEditorPlugin>();
 	EditorPlugins::add_by_type<MultiMeshEditorPlugin>();
 	EditorPlugins::add_by_type<OccluderInstance3DEditorPlugin>();
+#endif
 	EditorPlugins::add_by_type<PackedSceneEditorPlugin>();
+#ifndef _3D_DISABLED
 	EditorPlugins::add_by_type<Path3DEditorPlugin>();
 	EditorPlugins::add_by_type<PhysicalBone3DEditorPlugin>();
 	EditorPlugins::add_by_type<Polygon3DEditorPlugin>();
+#endif
 	EditorPlugins::add_by_type<ResourcePreloaderEditorPlugin>();
 	EditorPlugins::add_by_type<ShaderEditorPlugin>();
 	EditorPlugins::add_by_type<ShaderFileEditorPlugin>();
+#ifndef _3D_DISABLED
 	EditorPlugins::add_by_type<Skeleton3DEditorPlugin>();
+#endif
 	EditorPlugins::add_by_type<SpriteFramesEditorPlugin>();
 	EditorPlugins::add_by_type<StyleBoxEditorPlugin>();
 	EditorPlugins::add_by_type<SubViewportPreviewEditorPlugin>();
@@ -267,8 +292,10 @@ void register_editor_types() {
 	EditorPlugins::add_by_type<ThemeEditorPlugin>();
 	EditorPlugins::add_by_type<ToolButtonEditorPlugin>();
 	EditorPlugins::add_by_type<VirtualJoystickEditorPlugin>();
+#ifndef _3D_DISABLED
 	EditorPlugins::add_by_type<VoxelGIEditorPlugin>();
-#ifndef DISABLE_DEPRECATED
+#endif
+#if !defined(DISABLE_DEPRECATED) && !defined(_3D_DISABLED)
 	EditorPlugins::add_by_type<SkeletonIK3DEditorPlugin>();
 #endif
 

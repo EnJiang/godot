@@ -41,15 +41,16 @@
 #include "editor/editor_node.h"
 #include "editor/editor_string_names.h"
 #include "editor/file_system/editor_file_system.h"
-#include "editor/scene/material_editor_plugin.h"
 #include "editor/settings/editor_settings.h"
 #include "editor/themes/editor_scale.h"
 #include "editor/themes/editor_theme_manager.h"
-#include "scene/3d/mesh_instance_3d.h"
 #include "scene/gui/panel_container.h"
 #include "scene/gui/split_container.h"
 #include "scene/gui/texture_rect.h"
+#ifndef _3D_DISABLED
 #include "scene/resources/sky.h"
+#endif
+#include "scene/resources/material.h"
 #include "scene/resources/style_box_flat.h"
 #include "servers/display/display_server.h"
 #include "servers/rendering/rendering_server.h"
@@ -258,12 +259,14 @@ HashMap<String, String> TextShaderPreview::builtin_canvas_types = {
 };
 
 TextShaderPreview::TextShaderPreview() {
+#ifndef _3D_DISABLED
 	env.instantiate();
 	Ref<Sky> sky = memnew(Sky);
 	env->set_sky(sky);
 	env->set_background(Environment::BG_COLOR);
 	env->set_ambient_source(Environment::AMBIENT_SOURCE_SKY);
 	env->set_reflection_source(Environment::REFLECTION_SOURCE_SKY);
+#endif
 
 	shader_material.instantiate();
 
@@ -319,9 +322,8 @@ TextShaderPreview::TextShaderPreview() {
 	surface_container->set_anchors_and_offsets_preset(Control::PRESET_FULL_RECT);
 	panel->add_child(surface_container);
 
-	surface = memnew(MaterialEditor);
+	surface = memnew(Control);
 	surface->set_mouse_filter(Control::MOUSE_FILTER_PASS);
-	surface->set_autohide_buttons(true);
 	surface_container->add_child(surface);
 
 	// Error
@@ -350,7 +352,7 @@ void TextShaderPreview::_on_hover_enter() {
 	delete_button->show();
 	goto_button->show();
 
-	DisplayServer::get_singleton()->cursor_set_shape(DisplayServerEnums::CURSOR_ARROW); // Since MaterialEditor doesn't set cursor.
+	DisplayServer::get_singleton()->cursor_set_shape(DisplayServerEnums::CURSOR_ARROW);
 }
 
 void TextShaderPreview::_on_hover_exit() {
@@ -616,7 +618,6 @@ void TextShaderPreview::_reset_shader_parameters(Ref<ShaderMaterial> &p_target) 
 }
 
 void TextShaderPreview::_show_error(const String &p_error) {
-	surface->edit(Ref<Material>(), env);
 	error_label->set_text(p_error);
 	surface_container->hide();
 	error_container->show();
@@ -644,34 +645,6 @@ Ref<ShaderMaterial> TextShaderPreview::_get_source_material() const {
 		}
 
 		return Ref<ShaderMaterial>();
-	}
-
-	const GeometryInstance3D *gi = Object::cast_to<GeometryInstance3D>(object);
-	if (gi) {
-		const Ref<ShaderMaterial> material_overlay = gi->get_material_overlay();
-		if (material_overlay.is_valid() && _match_uniforms(material_overlay, shader_material)) {
-			return material_overlay;
-		}
-
-		const Ref<ShaderMaterial> material_override = gi->get_material_override();
-		if (material_override.is_valid() && _match_uniforms(material_override, shader_material)) {
-			return material_override;
-		}
-
-		const MeshInstance3D *mi = Object::cast_to<MeshInstance3D>(object);
-		if (mi) {
-			const Ref<Mesh> mesh = mi->get_mesh();
-
-			if (mesh.is_valid()) {
-				for (int i = 0; i < mesh->get_surface_count(); i++) {
-					const Ref<ShaderMaterial> surface_material = Object::cast_to<ShaderMaterial>(mi->get_surface_override_material(i).ptr());
-
-					if (surface_material.is_valid() && _match_uniforms(surface_material, shader_material)) {
-						return surface_material;
-					}
-				}
-			}
-		}
 	}
 
 	return Ref<ShaderMaterial>();
@@ -775,8 +748,7 @@ void TextShaderPreview::set_shader_code(const String &p_code, int p_line, bool p
 
 	error_container->hide();
 	surface_container->show();
-	surface->edit(shader_material.ptr(), env);
-	surface->show(); // Edit may have called hide() earlier on failed compilation.
+	surface->show();
 }
 
 /*** SHADER SCRIPT EDITOR ****/

@@ -36,8 +36,9 @@
 #include "scene/gui/rich_text_label.h"
 #include "servers/rendering/shader_warnings.h"
 
-class MaterialEditor;
+#ifndef _3D_DISABLED
 class Environment;
+#endif
 class ShaderMaterial;
 class Timer;
 class TextureRect;
@@ -70,9 +71,11 @@ private:
 	Button *goto_button = nullptr;
 	Button *delete_button = nullptr;
 	MarginContainer *surface_container = nullptr;
-	MaterialEditor *surface = nullptr;
+	Control *surface = nullptr;
 	Ref<ShaderMaterial> shader_material;
+#ifndef _3D_DISABLED
 	Ref<Environment> env;
+#endif
 	MarginContainer *error_container = nullptr;
 	TextureRect *error_icon = nullptr;
 	Label *error_label = nullptr;

@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  editor_plugin_list.h                                                  */
+/*  navigation_constants_3d.h                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -30,24 +30,50 @@
 
 #pragma once
 
-#include "editor/plugins/editor_plugin.h"
+namespace NavigationEnums3D {
 
-class Control;
-class InputEvent;
-
-class EditorPluginList {
-	LocalVector<EditorPlugin *> plugins_list;
-
-public:
-	bool forward_gui_input(const Ref<InputEvent> &p_event) const;
-	void forward_canvas_draw_over_viewport(Control *p_overlay) const;
-	void forward_canvas_force_draw_over_viewport(Control *p_overlay) const;
-#ifndef _3D_DISABLED
-	EditorPlugin::AfterGUIInput forward_3d_gui_input(Camera3D *p_camera, const Ref<InputEvent> &p_event, bool p_serve_when_force_input_enabled) const;
-	void forward_3d_draw_over_viewport(Control *p_overlay) const;
-	void forward_3d_force_draw_over_viewport(Control *p_overlay) const;
-#endif
-
-	void add_plugin(EditorPlugin *p_plugin);
-	void remove_plugin(EditorPlugin *p_plugin);
+enum PathfindingAlgorithm {
+	PATHFINDING_ALGORITHM_ASTAR = 0,
 };
+
+enum PathPostProcessing {
+	PATH_POSTPROCESSING_CORRIDORFUNNEL = 0,
+	PATH_POSTPROCESSING_EDGECENTERED,
+	PATH_POSTPROCESSING_NONE,
+};
+
+enum PathSegmentType {
+	PATH_SEGMENT_TYPE_REGION = 0,
+	PATH_SEGMENT_TYPE_LINK
+};
+
+enum PathMetadataFlags {
+	PATH_INCLUDE_NONE = 0,
+	PATH_INCLUDE_TYPES = 1,
+	PATH_INCLUDE_RIDS = 2,
+	PATH_INCLUDE_OWNERS = 4,
+	PATH_INCLUDE_ALL = PATH_INCLUDE_TYPES | PATH_INCLUDE_RIDS | PATH_INCLUDE_OWNERS
+};
+
+} // namespace NavigationEnums3D
+
+namespace NavigationDefaults3D {
+
+constexpr float NAV_MESH_CELL_HEIGHT = 0.25f;
+constexpr float NAV_MESH_CELL_SIZE = 0.25f;
+constexpr float NAV_MESH_CELL_SIZE_MIN = 0.01f;
+constexpr const char *const NAV_MESH_CELL_SIZE_HINT = "0.001,100,0.001,or_greater";
+
+constexpr float EDGE_CONNECTION_MARGIN = 0.25f;
+constexpr float LINK_CONNECTION_RADIUS = 1.0f;
+constexpr int path_search_max_polygons = 4096;
+
+constexpr float AVOIDANCE_AGENT_HEIGHT = 1.0;
+constexpr float AVOIDANCE_AGENT_RADIUS = 0.5;
+constexpr float AVOIDANCE_AGENT_MAX_SPEED = 10.0;
+constexpr float AVOIDANCE_AGENT_TIME_HORIZON_AGENTS = 1.0;
+constexpr float AVOIDANCE_AGENT_TIME_HORIZON_OBSTACLES = 0.0;
+constexpr int AVOIDANCE_AGENT_MAX_NEIGHBORS = 10;
+constexpr float AVOIDANCE_AGENT_NEIGHBOR_DISTANCE = 50.0;
+
+} // namespace NavigationDefaults3D
